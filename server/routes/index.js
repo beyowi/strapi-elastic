@@ -1,42 +1,15 @@
-module.exports = [
-  {
-    method: "POST",
-    path: "/migrate-model",
-    handler: "elasticsearch.migrateModel",
-    config: {
-      policies: [],
-    },
+'use strict';
+
+const adminRoutes = require('./admin');
+const clientRoutes = require('./client');
+
+module.exports = {
+  admin: {
+    type: 'admin',
+    routes: adminRoutes,
   },
-  {
-    method: "POST",
-    path: "/create-index",
-    handler: "elasticsearch.createIndex",
-    config: {
-      policies: [],
-    },
+  'content-api': {
+    type: 'content-api',
+    routes: clientRoutes,
   },
-  {
-    method: "POST",
-    path: "/delete-index",
-    handler: "elasticsearch.deleteIndex",
-    config: {
-      policies: [],
-    },
-  },
-  {
-    method: "GET",
-    path: "/models",
-    handler: "elasticsearch.fetchModels",
-    config: {
-      policies: [],
-    },
-  },
-  {
-    method: "GET",
-    path: "/model",
-    handler: "elasticsearch.fetchModel",
-    config: {
-      policies: [],
-    },
-  },
-];
+};

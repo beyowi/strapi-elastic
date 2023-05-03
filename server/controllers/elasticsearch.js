@@ -1,19 +1,19 @@
-const _ = require("lodash");
+const _ = require('lodash');
 const {
   helper: { findMappingConfig },
-} = require("../services");
+} = require('../services');
 
 module.exports = {
-  fetchModels: (ctx) => {
+  fetchModels: ctx => {
     const { models } = strapi.config.elasticsearch;
 
-    const enabledModels = models.filter((model) => model.enabled);
+    const enabledModels = models.filter(model => model.enabled);
 
-    const sortedEnabledModels = _.orderBy(enabledModels, ["model"], ["asc"]);
+    const sortedEnabledModels = _.orderBy(enabledModels, ['model'], ['asc']);
 
-    const disabledModels = models.filter((model) => !model.enabled);
+    const disabledModels = models.filter(model => !model.enabled);
 
-    const sortedDisabledModels = _.orderBy(disabledModels, ["model"], ["asc"]);
+    const sortedDisabledModels = _.orderBy(disabledModels, ['model'], ['asc']);
 
     // there is a bug here
     // models are not sorted
@@ -21,20 +21,12 @@ module.exports = {
 
     const response = _.map(
       allModels,
-      _.partialRight(_.pick, [
-        "model",
-        "content",
-        "plugin",
-        "index",
-        "migration",
-        "pk",
-        "enabled",
-      ])
+      _.partialRight(_.pick, ['model', 'content', 'plugin', 'index', 'migration', 'pk', 'enabled'])
     );
 
     return ctx.send(response);
   },
-  fetchModel: async (ctx) => {
+  fetchModel: async ctx => {
     const { index, _start, _limit } = ctx.query;
     let data, count, map;
     let status = {};
@@ -58,29 +50,26 @@ module.exports = {
     try {
       data = await strapi.elastic.find(index, _limit, _start);
     } catch (e) {
-      strapi.log.warn(
-        `There is an error to get fetch model ${index} from Elasticsearch`
-      );
+      strapi.log.warn(`There is an error to get fetch model ${index} from Elasticsearch`);
       return ctx.send({ data: null, total: 0, status });
     }
-
     return ctx.send({
-      data: sanitizeHits(data.hits.hits),
+      data: sanitizeHits(data.body.hits.hits),
       total: count && count.body && count.body.count,
       status,
     });
   },
-  migrateModel: async (ctx) => {
+  migrateModel: async ctx => {
     const { model } = ctx.request.body;
 
     await strapi.elastic.migrateModel(model);
     return ctx.send({ success: true });
   },
-  createIndex: async (ctx) => {
+  createIndex: async ctx => {
     const { model } = ctx.request.body;
 
     const { models } = strapi.config.elasticsearch;
-    const targetModel = models.find((item) => item.model === model);
+    const targetModel = models.find(item => item.model === model);
 
     const mapping = await findMappingConfig({ targetModel });
 
@@ -98,11 +87,11 @@ module.exports = {
 
     return ctx.send({ success: true });
   },
-  deleteIndex: async (ctx) => {
+  deleteIndex: async ctx => {
     const { model } = ctx.request.body;
 
     const { models } = strapi.config.elasticsearch;
-    const targetModel = models.find((item) => item.model === model);
+    const targetModel = models.find(item => item.model === model);
 
     try {
       await strapi.elastic.indices.delete({
@@ -113,20 +102,28 @@ module.exports = {
       return ctx.throw(500);
     }
   },
+  search: async ctx => {
+    const { q, size } = ctx.query;
+    const result = await strapi.elastic.search({
+      q: q,
+      size: size,
+    });
+    ctx.send(result);
+  },
 };
 
 function sanitizeHits(hits) {
   const data = [];
   for (const item of hits) {
-    const source = item["_source"];
+    const source = item['_source'];
     if (!_.isEmpty(source)) {
       const sourceKeys = Object.keys(source);
 
       for (const key of sourceKeys) {
         if (_.isArray(source[key])) {
-          source[key] = "[Array]";
+          source[key] = '[Array]';
         } else if (_.isObject(source[key])) {
-          source[key] = "[Object]";
+          source[key] = '[Object]';
         }
       }
       data.push(source);
