@@ -11,7 +11,7 @@
     "@buffetjs/core": "^3.3.8",
     "@buffetjs/styles": "^3.3.8",
     "@elastic/elasticsearch": "^7.8.0",
-    "axios": "^0.20.0",
+    "axios": "^0.21.1",
     "lodash": "^4.17.21",
     "moment": "^2.27.0"
   },
